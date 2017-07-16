@@ -27,4 +27,13 @@
   <version>0.20.1-alpha</version>
 </dependency>
   </dependencies>
+  <build>
+    <plugins>
+        <plugin>
+            <groupId>com.google.appengine</groupId>
+            <artifactId>appengine-maven-plugin</artifactId>
+            <version>1.9.9</version>
+        </plugin>
+    </plugins>
+</build>
 </project>
