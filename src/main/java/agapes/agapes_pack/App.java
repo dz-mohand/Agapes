@@ -49,7 +49,6 @@ public class App
     	Bucket bucket = storage.get("agapes_storage");
     	Blob blob = bucket.get("Tickets/K113514051.txt");
     	
-    	// liste de type
     	
     	HashMap<String, String> type = new HashMap<String, String>();
     	
@@ -158,21 +157,20 @@ public class App
         		  table.load(FormatOptions.csv(), "gs://agapes_storage/Tickets/"+key+".txt"); 
     			  
     		  }
+    		  TableId tableId1 = TableId.of(datasetName, "bigtable");
     		  
-    		  for ( String key : type.keySet() ) {
-    		  if(key.equals("ACT")||key.equals("DAT")||key.equals("NPR")||key.equals("REP")||key.equals("FID")) {
-    		  /////table final ////
-    		  TableId tableId1 = TableId.of(datasetName, key);
-    		  
-    		  Schema schema1 = Schema.of(field1,field2,field3,field4,field5,field6,field7,field8,field9,field10);
+    		  Schema schema1 = Schema.of(field1,field2,field3,field4,field5,field6,field7,field8,field9,field10,field11,field12,field13);
     		  
     		  TableDefinition tableDefinition1 = StandardTableDefinition.of(schema1);
     		  TableInfo tableInfo1 = TableInfo.newBuilder(tableId1, tableDefinition1).build();
     		  Table table1 = bigquery.create(tableInfo1);
     		 
+    		  for ( String key : type.keySet() ) {
+    		  if(key.equals("ACT")||key.equals("DAT")||key.equals("NPR")||key.equals("REP")||key.equals("FID")) {
+    		  /////table final ////
     		  
     		  QueryJobConfiguration queryConfig =
-    				    QueryJobConfiguration.newBuilder("insert into Agapes_Datasets."+key+"(Date,Restaurent,TPV,Tiroir,Ticket,Emp,Ligne,Heure,Type,Ligne_) select substr(Ligne, 1,11) as Date, substr(Ligne,12,4) as Restaurent, \r\n" + 
+    				    QueryJobConfiguration.newBuilder("insert into Agapes_Datasets.bigtable (Date,Restaurent,TPV,Tiroir,Ticket,Emp,Ligne,Heure,Type,Ligne_) select substr(Ligne, 1,11) as Date, substr(Ligne,12,4) as Restaurent, \r\n" + 
     				    		"       substr(Ligne,18,2) as TPV,substr(Ligne, 24,3) as Tiroir,\r\n" + 
     				    		"       substr(Ligne, 29,5) as Ticket, substr(Ligne, 35,3) as Emp, substr(Ligne, 39,5) as Ligne, \r\n" + 
     				    		"       substr(Ligne, 45,6) as Heure, substr(Ligne, 52,3) as Type, substr(Ligne, 56) as Ligne_ from Agapes_Datasets."+key+"_temp")
@@ -185,27 +183,21 @@ public class App
     		  
     		  queryJob = queryJob.waitFor();
     		  com.google.cloud.bigquery.QueryResponse response = bigquery.getQueryResults(jobId);
-    		  
     		  bigquery.getTable("Agapes_Datasets", key+"_temp").delete();
+    		 // bigquery.getTable("Agapes_Datasets", key+"_temp").delete();
 			  //table.delete();
-				
+
+
     		  } 
     		  
     		  }
     		  for ( String key : type.keySet() ) {
-        		  if(key.equals("DMN")||key.equals("PLU")||key.equals("TVA")||key.equals("RGT")||key.equals("PLU")||key.equals("PMN")||key.equals("DMN")||key.equals("TOT")) {
+        		  if(key.equals("DMN")||key.equals("PLU")||key.equals("TVA")||key.equals("RGT")||key.equals("PMN")||key.equals("DMN")||key.equals("TOT")) {
         		  /////table final ////
-        		  TableId tableId1 = TableId.of(datasetName, key);
         		  
-        		  Schema schema1 = Schema.of(field1,field2,field3,field4,field5,field6,field7,field8,field9,field10,field11,field12,field13);
-        		  
-        		  TableDefinition tableDefinition1 = StandardTableDefinition.of(schema1);
-        		  TableInfo tableInfo1 = TableInfo.newBuilder(tableId1, tableDefinition1).build();
-        		  Table table1 = bigquery.create(tableInfo1);
-        		 
         		  
         		  QueryJobConfiguration queryConfig =
-        				    QueryJobConfiguration.newBuilder("insert into Agapes_Datasets."+key+"(Date,Restaurent,TPV,Tiroir,Ticket,Emp,Ligne,Heure,Type,Ligne_,PLU,PLU_code,Montant) select substr(Ligne, 1,11) as Date, substr(Ligne,12,4) as Restaurent, \r\n" + 
+        				    QueryJobConfiguration.newBuilder("insert into Agapes_Datasets.bigtable(Date,Restaurent,TPV,Tiroir,Ticket,Emp,Ligne,Heure,Type,Ligne_,PLU,PLU_code,Montant) select substr(Ligne, 1,11) as Date, substr(Ligne,12,4) as Restaurent, \r\n" + 
         				    		"       substr(Ligne,18,2) as TPV,substr(Ligne, 24,3) as Tiroir,\r\n" + 
         				    		"       substr(Ligne, 29,5) as Ticket, substr(Ligne, 35,3) as Emp, substr(Ligne, 39,5) as Ligne, \r\n" + 
         				    		"       substr(Ligne, 45,6) as Heure, substr(Ligne, 52,3) as Type, substr(Ligne, 56,39) as Ligne_ ,substr(Ligne, 97,4) as PLU,substr(Ligne, 102,5) as Code_PLU,substr(Ligne, 118,4) as Montant  from Agapes_Datasets."+key+"_temp")
@@ -223,13 +215,16 @@ public class App
         		  } 
         		  
         		  }
-    		 
+    	
         String[]recap = type.get("RECAP").split("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ");	  
     	for (int s=2;s<recap.length;s++) {
-    		BlobId blobId = BlobId.of("agapes_storage", "Recap/"+s+".txt");
+    	  BlobId blobId = BlobId.of("agapes_storage", "Recap/"+s+".txt");
   		  BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType("text/plain").build();
-  		  Blob blob_act = storage.create(blobInfo, recap[s].toString().getBytes(UTF_8));    		
+  		  Blob blob_act = storage.create(blobInfo, recap[s].toString().getBytes(UTF_8)); 
+  		  // to do : la table à crée 
+  		 
     	}
+    
     	}
     	
     
